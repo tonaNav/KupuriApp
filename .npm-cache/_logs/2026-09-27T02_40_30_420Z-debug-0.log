@@ -1,0 +1,80 @@
+0 verbose cli /opt/homebrew/Cellar/node/26.4.0/bin/node /opt/homebrew/bin/npm
+1 info using npm@11.17.0
+2 info using node@v26.4.0
+3 silly config load:file:/opt/homebrew/lib/node_modules/npm/npmrc
+4 silly config load:file:/Volumes/OS/proyectos/KupuriApp/.npmrc
+5 silly config load:file:/Users/tona/.npmrc
+6 silly config load:file:/opt/homebrew/etc/npmrc
+7 verbose title npm install leaflet.heat
+8 verbose argv "--cache" "./.npm-cache" "install" "leaflet.heat"
+9 verbose logfile logs-max:10 dir:/Volumes/OS/proyectos/KupuriApp/.npm-cache/_logs/2026-09-27T02_40_30_420Z-
+10 verbose logfile /Volumes/OS/proyectos/KupuriApp/.npm-cache/_logs/2026-09-27T02_40_30_420Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4395630592 maxSize:1098907648 maxEntrySize:549453824
+13 silly idealTree buildDeps
+14 silly fetch manifest leaflet.heat@*
+15 silly packumentCache full:https://registry.npmjs.org/leaflet.heat cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/leaflet.heat 411ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/leaflet.heat set size:undefined disposed:false
+18 silly placeDep ROOT leaflet.heat@0.2.0 OK for: kupuriapp@1.0.0 want: *
+19 silly reify moves {}
+20 silly audit bulk request {
+20 silly audit   '@oxc-project/types': [ '0.151.0' ],
+20 silly audit   '@rolldown/binding-android-arm-eabi': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-android-arm64': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-darwin-arm64': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-darwin-x64': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-freebsd-x64': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-arm-gnueabihf': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-arm64-gnu': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-arm64-musl': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-ppc64-gnu': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-s390x-gnu': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-x64-gnu': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-linux-x64-musl': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-openharmony-arm64': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-win32-arm64-msvc': [ '1.2.11' ],
+20 silly audit   '@rolldown/binding-win32-x64-msvc': [ '1.2.11' ],
+20 silly audit   '@rolldown/pluginutils': [ '1.0.1' ],
+20 silly audit   'detect-libc': [ '2.1.2' ],
+20 silly audit   fdir: [ '6.5.0' ],
+20 silly audit   fsevents: [ '2.3.3' ],
+20 silly audit   leaflet: [ '1.9.4' ],
+20 silly audit   lightningcss: [ '1.33.0' ],
+20 silly audit   'lightningcss-android-arm64': [ '1.33.0' ],
+20 silly audit   'lightningcss-darwin-arm64': [ '1.33.0' ],
+20 silly audit   'lightningcss-darwin-x64': [ '1.33.0' ],
+20 silly audit   'lightningcss-freebsd-x64': [ '1.33.0' ],
+20 silly audit   'lightningcss-linux-arm-gnueabihf': [ '1.33.0' ],
+20 silly audit   'lightningcss-linux-arm64-gnu': [ '1.33.0' ],
+20 silly audit   'lightningcss-linux-arm64-musl': [ '1.33.0' ],
+20 silly audit   'lightningcss-linux-x64-gnu': [ '1.33.0' ],
+20 silly audit   'lightningcss-linux-x64-musl': [ '1.33.0' ],
+20 silly audit   'lightningcss-win32-arm64-msvc': [ '1.33.0' ],
+20 silly audit   'lightningcss-win32-x64-msvc': [ '1.33.0' ],
+20 silly audit   nanoid: [ '3.3.19' ],
+20 silly audit   picocolors: [ '1.1.1' ],
+20 silly audit   picomatch: [ '4.0.7' ],
+20 silly audit   postcss: [ '8.5.28' ],
+20 silly audit   rolldown: [ '1.2.11' ],
+20 silly audit   'source-map-js': [ '1.2.1' ],
+20 silly audit   tinyglobby: [ '0.2.17' ],
+20 silly audit   vite: [ '8.3.1' ],
+20 silly audit   'leaflet.heat': [ '0.2.0' ]
+20 silly audit }
+21 http cache leaflet.heat@https://registry.npmjs.org/leaflet.heat/-/leaflet.heat-0.2.0.tgz 0ms (cache hit)
+22 silly tarball no local data for leaflet.heat@https://registry.npmjs.org/leaflet.heat/-/leaflet.heat-0.2.0.tgz. Extracting by manifest.
+23 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 145ms
+24 silly audit report {}
+25 http fetch GET 200 https://registry.npmjs.org/leaflet.heat/-/leaflet.heat-0.2.0.tgz 393ms (cache miss)
+26 silly ADD node_modules/leaflet.heat
+27 warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+27 warn allow-scripts   fsevents@2.3.3 (install: (install scripts present))
+27 warn allow-scripts
+27 warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+28 verbose cwd /Volumes/OS/proyectos/KupuriApp
+29 verbose os Darwin 25.6.0
+30 verbose node v26.4.0
+31 verbose npm  v11.17.0
+32 verbose exit 0
+33 info ok

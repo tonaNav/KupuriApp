@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kupuri HidroAlerta • Monitoreo Ciudadano de Ríos, Humedales y Lagos</title>
+  <meta name="description" content="Plataforma ciudadana basada en mapas libres para la vigilancia, denuncia y reporte de contaminación en ríos, lagos, humedales y sistemas hídricos con soporte anónimo o público." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300f2fe'><path d='M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z'/></svg>" />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="brand-wrapper" id="brand-btn" title="Centrar todos los sistemas hídricos">
+        <div class="brand-logo-icon">💧</div>
+        <div class="brand-text">
+          <h1>Kupuri <span class="badge-sub">HidroAlerta</span></h1>
+          <p>Red Comunitaria de Protección de Cuencas y Humedales</p>
+        </div>
+      </div>
+
+      <div class="nav-search-wrap">
+        <span class="nav-search-icon">🔍</span>
+        <input type="text" id="nav-search-input" placeholder="Buscar por río, humedal, lago, municipio o contaminante..." />
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn-nav" id="btn-export-geojson" title="Descargar capas GeoJSON para SIG/QGIS">
+          🗺️ GeoJSON
+        </button>
+        <button class="btn-nav" id="btn-export-csv" title="Descargar datos en CSV para denuncias formales">
+          📊 CSV
+        </button>
+        <button class="btn-primary-action" id="btn-new-report-nav">
+          <span style="font-size: 1.1rem; line-height: 1;">+</span>
+          <span>Reportar Contaminación</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main class="main-viewport">
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Map Location Picker Banner -->
+      <div id="picker-banner" class="picker-banner" style="display: none;">
+        <span>🎯 Haz clic en el río o humedal para situar la alerta:</span>
+        <strong id="picker-banner-text" style="color: var(--aqua-primary); font-size: 0.84rem;">Arrastra el marcador</strong>
+        <button class="btn-picker-confirm" id="btn-picker-confirm">Confirmar Punto</button>
+        <button class="btn-picker-cancel" id="btn-picker-cancel">Cancelar</button>
+      </div>
+
+      <!-- Slide-over Drawer Panel -->
+      <aside class="drawer-panel" id="drawer-panel">
+        <div class="drawer-header">
+          <div class="drawer-tabs">
+            <button class="tab-btn active" data-tab="reports">🌊 Reportes</button>
+            <button class="tab-btn" data-tab="stats">📈 Cuencas</button>
+            <button class="tab-btn" data-tab="guide">🛡️ Guía Legal</button>
+          </div>
+          <button class="drawer-close-btn" id="drawer-close-btn" title="Ocultar panel">✕</button>
+        </div>
+        <div class="drawer-body" id="drawer-body-content">
+          <!-- Dynamic Content rendered by JS -->
+        </div>
+      </aside>
+
+      <!-- Toggle Button to restore drawer -->
+      <button class="drawer-toggle-btn" id="drawer-toggle-btn" style="display: none;">
+        <span>🌊 Ver Reportes de Cuencas</span>
+      </button>
+
+      <!-- Map Floating Controls -->
+      <div class="map-floating-controls">
+        <!-- Layer Switcher -->
+        <button class="control-btn" id="btn-layer-switcher" data-tooltip="Capas de Mapa Hídrico">
+          🗺️
+        </button>
+        <div class="layers-menu" id="layers-menu">
+          <button class="layer-opt-btn active" data-layer="voyager">
+            <span>⛵</span> Carto Voyager (Hidro)
+          </button>
+          <button class="layer-opt-btn" data-layer="topo">
+            <span>⛰️</span> OpenTopoMap (Ríos & Relieve)
+          </button>
+          <button class="layer-opt-btn" data-layer="satellite">
+            <span>🛰️</span> Esri Satélite (Riberas)
+          </button>
+          <button class="layer-opt-btn" data-layer="osm">
+            <span>🌐</span> OpenStreetMap Estándar
+          </button>
+        </div>
+
+        <!-- Heatmap Toggle -->
+        <button class="control-btn" id="btn-toggle-heatmap" data-tooltip="Mapa de Calor de Contaminación">
+          🔥
+        </button>
+
+        <!-- Locate User GPS -->
+        <button class="control-btn" id="btn-locate-user" data-tooltip="Mi Ubicación GPS">
+          📍
+        </button>
+
+        <!-- Fit all markers -->
+        <button class="control-btn" id="btn-fit-bounds" data-tooltip="Ver Todo el Mapa">
+          🧭
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Nuevo Reporte de Contaminación -->
+  <div class="modal-overlay" id="modal-new-report">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>💧 Reportar Contaminación en Sistema Hídrico</h3>
+        <button class="modal-close-btn" id="btn-close-new-report">✕</button>
+      </div>
+
+      <form id="form-new-report" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+        <div class="modal-body">
+          <!-- Título y Masa de agua -->
+          <div class="form-group">
+            <label class="form-label" for="input-title">
+              Título del Reporte <small>(Claro y conciso)</small>
+            </label>
+            <input type="text" id="input-title" class="form-control" placeholder="Ej. Descarga clandestina de aguas negras en Arroyo Seco" required />
+          </div>
+
+          <div class="form-group" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px;">
+            <div>
+              <label class="form-label" for="input-water-body">
+                Nombre del Río, Humedal o Lago
+              </label>
+              <input type="text" id="input-water-body" class="form-control" placeholder="Ej. Río Lerma, Humedales de Xochimilco, Cenote Azul" required />
+            </div>
+            <div>
+              <label class="form-label">
+                Ubicación Geográfica
+              </label>
+              <div style="display: flex; gap: 6px;">
+                <input type="text" id="input-coords-display" class="form-control" readonly placeholder="Lat, Lng" style="font-size: 0.76rem;" />
+                <button type="button" class="btn-secondary" id="btn-pick-on-map" title="Fijar en el mapa" style="padding: 0 10px; font-size: 1rem;">
+                  🗺️
+                </button>
+                <button type="button" class="btn-secondary" id="btn-form-gps" title="Mi GPS actual" style="padding: 0 10px; font-size: 1rem;">
+                  📍
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipo de Sistema Hídrico -->
+          <div class="form-group">
+            <label class="form-label">Tipo de Sistema Hídrico Afectado</label>
+            <div class="radio-cards-grid" id="water-type-grid">
+              <label class="radio-card selected">
+                <input type="radio" name="water-type" value="rio" checked />
+                <span class="radio-card-icon">🌊</span>
+                <span class="radio-card-title">Río / Cuenca</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="water-type" value="humedal" />
+                <span class="radio-card-icon">🌿</span>
+                <span class="radio-card-title">Humedal / Manglar</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="water-type" value="lago" />
+                <span class="radio-card-icon">⛵</span>
+                <span class="radio-card-title">Lago / Laguna</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="water-type" value="cenote" />
+                <span class="radio-card-icon">💧</span>
+                <span class="radio-card-title">Cenote / Manantial</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="water-type" value="arroyo" />
+                <span class="radio-card-icon">🏞️</span>
+                <span class="radio-card-title">Arroyo / Cañada</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="water-type" value="estuario" />
+                <span class="radio-card-icon">🐚</span>
+                <span class="radio-card-title">Estuario / Costa</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Tipo de Contaminante -->
+          <div class="form-group">
+            <label class="form-label">Tipo de Contaminación Observada</label>
+            <div class="radio-cards-grid" id="contaminant-grid">
+              <label class="radio-card selected">
+                <input type="radio" name="contaminant" value="aguas_negras" checked />
+                <span class="radio-card-icon">☣️</span>
+                <span class="radio-card-title">Aguas Negras / Drenaje</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="basura_plasticos" />
+                <span class="radio-card-icon">🗑️</span>
+                <span class="radio-card-title">Plásticos y Basura</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="quimicos_industriales" />
+                <span class="radio-card-icon">⚠️</span>
+                <span class="radio-card-title">Químicos Industriales</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="hidrocarburos" />
+                <span class="radio-card-icon">🛢️</span>
+                <span class="radio-card-title">Aceite / Hidrocarburos</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="espuma_toxica" />
+                <span class="radio-card-icon">🫧</span>
+                <span class="radio-card-title">Espuma Tóxica</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="eutrofizacion" />
+                <span class="radio-card-icon">🦠</span>
+                <span class="radio-card-title">Eutrofización / Algas</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="muerte_fauna" />
+                <span class="radio-card-icon">☠️</span>
+                <span class="radio-card-title">Muerte de Peces / Fauna</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="contaminant" value="desecacion" />
+                <span class="radio-card-icon">🏜️</span>
+                <span class="radio-card-title">Extracción / Desecación</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Nivel de Gravedad -->
+          <div class="form-group">
+            <label class="form-label">Nivel de Gravedad</label>
+            <div class="severity-selector">
+              <button type="button" class="sev-btn" data-severity="leve" style="--sev-c: var(--sev-leve);">
+                <span>🟢 Leve</span>
+                <small style="font-size: 0.65rem;">Afectación menor</small>
+              </button>
+              <button type="button" class="sev-btn selected" data-severity="moderado" style="--sev-c: var(--sev-moderado);">
+                <span>🟡 Moderado</span>
+                <small style="font-size: 0.65rem;">Olor / Acumulación</small>
+              </button>
+              <button type="button" class="sev-btn" data-severity="alto" style="--sev-c: var(--sev-alto);">
+                <span>🟠 Alto</span>
+                <small style="font-size: 0.65rem;">Vertido activo continuo</small>
+              </button>
+              <button type="button" class="sev-btn" data-severity="critico" style="--sev-c: var(--sev-critico);">
+                <span>🔴 Crítico</span>
+                <small style="font-size: 0.65rem;">Riesgo vital / Urgencia</small>
+              </button>
+            </div>
+            <input type="hidden" id="input-severity" value="moderado" />
+          </div>
+
+          <!-- Evidencia Fotográfica (Cámara en vivo o Galería) -->
+          <div class="form-group">
+            <label class="form-label">Evidencia Fotográfica del Agua o Descarga</label>
+            <div class="photo-capture-box" id="photo-capture-box">
+              <div id="photo-preview-wrap" class="photo-preview-wrap" style="display: none;">
+                <img id="photo-preview-img" src="" alt="Vista previa de foto" />
+                <button type="button" class="btn-remove-photo" id="btn-remove-photo" title="Eliminar foto">✕</button>
+              </div>
+
+              <div id="photo-prompt-wrap">
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px;">
+                  Captura una fotografía clara del cauce, la espuma o la tubería
+                </p>
+                <p style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 12px;">
+                  Las fotos aumentan un 85% la efectividad de las inspecciones oficiales
+                </p>
+                <div class="photo-buttons-row">
+                  <button type="button" class="btn-camera" id="btn-camera-trigger">
+                    <span>📷</span> Abrir Cámara en Vivo
+                  </button>
+                  <button type="button" class="btn-upload-file" id="btn-upload-file-trigger">
+                    <span>📁</span> Subir de Galería
+                  </button>
+                </div>
+              </div>
+
+              <input type="file" id="file-input-photo" accept="image/*" capture="environment" style="display: none;" />
+            </div>
+          </div>
+
+          <!-- Color y Olor del Agua -->
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label class="form-label" for="input-water-color">Aspecto / Color del Agua</label>
+              <select id="input-water-color" class="form-control">
+                <option value="Clara pero con residuos">Clara pero con residuos</option>
+                <option value="Turbia / Marrón terroso">Turbia / Marrón terroso</option>
+                <option value="Negra / Grisácea profunda">Negra / Grisácea profunda</option>
+                <option value="Verde intenso (microalgas)">Verde intenso (microalgas)</option>
+                <option value="Espumosa con nata lechosa">Espumosa con nata lechosa</option>
+                <option value="Tornasolada / Iridiscente (aceites)">Tornasolada / Iridiscente (aceites)</option>
+                <option value="Rojiza o química inusual">Rojiza o química inusual</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="input-odor">Olor Percibido</label>
+              <select id="input-odor" class="form-control">
+                <option value="Inodoro o natural">Inodoro o natural</option>
+                <option value="Fétido / Drenaje de aguas negras">Fétido / Drenaje de aguas negras</option>
+                <option value="Químico penetrante / Solvente">Químico penetrante / Solvente</option>
+                <option value="Gasolina / Aceite de motor">Gasolina / Aceite de motor</option>
+                <option value="Materia orgánica podrida / Pescado">Materia orgánica podrida / Pescado</option>
+                <option value="Azufre / Huevo podrido">Azufre / Huevo podrido</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Descripción y Comentarios -->
+          <div class="form-group">
+            <label class="form-label" for="input-description">
+              Descripción Detallada y Observaciones
+            </label>
+            <textarea id="input-description" class="form-control" rows="3" placeholder="Indica detalles como: frecuencia del derrame, afectación en peces o plantas, origen aproximado (fábrica, camión, colector) o si vecinos han enfermado..."></textarea>
+          </div>
+
+          <!-- Privacidad e Identidad: Anónimo o con Nombre -->
+          <div class="form-group">
+            <label class="form-label">
+              Identidad de la Denuncia Ciudadana
+            </label>
+            <div class="privacy-selector-card">
+              <div class="privacy-options">
+                <button type="button" class="privacy-opt-btn active" id="privacy-opt-anon">
+                  <strong>🛡️ Reporte Anónimo</strong>
+                  <small>Tu nombre y datos personales permanecerán 100% confidenciales para protegerte de cualquier represalia.</small>
+                </button>
+                <button type="button" class="privacy-opt-btn" id="privacy-opt-public">
+                  <strong>👤 Publicar con mi Nombre</strong>
+                  <small>Firma como ciudadano, colectivo ambiental o brigada comunitaria para dar mayor respaldo público.</small>
+                </button>
+              </div>
+
+              <input type="hidden" id="input-is-anonymous" value="true" />
+
+              <div class="public-author-fields" id="public-author-fields">
+                <div>
+                  <label class="form-label" for="input-author-name" style="font-size: 0.78rem;">Nombre Completo o Colectivo</label>
+                  <input type="text" id="input-author-name" class="form-control" placeholder="Ej. Red de Guardianes del Lerma" />
+                </div>
+                <div>
+                  <label class="form-label" for="input-author-email" style="font-size: 0.78rem;">Correo de Contacto (Opcional)</label>
+                  <input type="email" id="input-author-email" class="form-control" placeholder="contacto@colectivo.org" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel-new-report">Cancelar</button>
+          <button type="submit" class="btn-submit-report">
+            <span>💧 Publicar Alerta Hídrica</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Live Camera Viewfinder -->
+  <div class="modal-overlay" id="modal-camera">
+    <div class="modal-window" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>📷 Cámara en Vivo • Evidencia Hídrica</h3>
+        <button class="modal-close-btn" id="btn-close-camera">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div class="camera-viewfinder-wrap">
+          <video id="camera-video" class="camera-video" playsinline autoplay muted></video>
+          <div class="camera-grid-overlay"></div>
+        </div>
+        <div class="camera-controls-bar">
+          <button type="button" class="btn-secondary" id="btn-camera-flip" title="Girar Cámara">
+            🔄 Cambiar Cámara
+          </button>
+          <button type="button" class="btn-shutter" id="btn-camera-shutter" title="Tomar Foto"></button>
+          <div style="width: 80px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Detalle Completo de Reporte -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal-window" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3>💧 Ficha Técnica de la Alerta Hídrica</h3>
+        <button class="modal-close-btn" id="btn-close-detail">✕</button>
+      </div>
+      <div class="modal-body" id="detail-modal-content">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
